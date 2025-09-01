@@ -3,11 +3,12 @@ import "./ProductList.css";
 import CartItem from "./CartItem";
 import { useDispatch } from "react-redux";
 import { addItem } from "./CartSlice";
+import { useSelector } from "react-redux";
 function ProductList({ onHomeClick }) {
   const [showCart, setShowCart] = useState(false);
   const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
-  const [addedToCart, setAddedToCart] = useState({});
   const dispatch = useDispatch();
+  const cart = useSelector((state) => state.cart.items);
 
   const plantsArray = [
     {
@@ -294,11 +295,13 @@ function ProductList({ onHomeClick }) {
 
   const handleAddToCart = (item) => {
     dispatch(addItem(item));
-    setAddedToCart((prevState) => ({
-      ...prevState,
-      [item.name]: true,
-    }));
   };
+
+  const calculateTotalQuantity = () => {
+    return cart ? cart.length : 0; // Calculate total by items
+    // return cart ? cart.reduce((total, item) => total + item.quantity, 0) : 0; // Calculate total by quantity
+  };
+
   return (
     <div>
       <div className="navbar" style={styleObj}>
@@ -327,6 +330,9 @@ function ProductList({ onHomeClick }) {
             {" "}
             <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}>
               <h1 className="cart">
+                <div className="cart_quantity_count">
+                  {calculateTotalQuantity()}
+                </div>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 256 256"
@@ -356,26 +362,37 @@ function ProductList({ onHomeClick }) {
         <div className="product-grid">
           {plantsArray.map((item, i) => (
             <div key={i} className="product-list">
-              {item.plants.map((subItem, i) => (
-                <div key={i} className="product-card">
-                  <img
-                    src={subItem.image}
-                    className="product-image"
-                    alt={subItem.name}
-                  />
-                  <div className="product-title">{subItem.name}</div>
-                  <div className="product-description">
-                    {subItem.description}
+              {item.plants.map((subItem, i) => {
+                // Check if product is in cart
+                const isInCart = cart.find(
+                  (cartItem) => cartItem.name === subItem.name
+                );
+                return (
+                  <div key={i} className="product-card">
+                    <img
+                      src={subItem.image}
+                      className="product-image"
+                      alt={subItem.name}
+                    />
+                    <div className="product-title">{subItem.name}</div>
+                    <div className="product-description">
+                      {subItem.description}
+                    </div>
+                    <div className="product-price">{subItem.cost}</div>
+                    <button
+                      className={
+                        isInCart
+                          ? "product-button added-to-cart"
+                          : "product-button"
+                      }
+                      onClick={() => handleAddToCart(subItem)}
+                      disabled={isInCart}
+                    >
+                      {isInCart ? "Added to cart" : "Add to cart"}
+                    </button>
                   </div>
-                  <div className="product-price">{subItem.cost}</div>
-                  <button
-                    className="product-button"
-                    onClick={() => handleAddToCart(subItem)}
-                  >
-                    Add to card
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
